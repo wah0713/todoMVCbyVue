@@ -1,0 +1,175 @@
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title></title>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="googlebot" content="noindex, nofollow">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="./css/index.css">
+    <script type="text/javascript" src="./lib/vue.js"></script>
+
+</head>
+
+<body>
+    <section class="todoapp">
+        <header class="header">
+            <h1>任务清单</h1>
+            <input autofocus="autofocus" autocomplete="off" placeholder="想干啥?" class="new-todo" v-model.trim="inputValue"
+                @keyup.enter="addTodo">
+        </header>
+        <section class="main">
+            <input type="checkbox" class="toggle-all" v-model="isAll" @change="checkedAll">
+            <ul class="todo-list">
+                <li v-for="(item, index) in filterArr" class="todo" :class="{completed:item.isCompleted,editing:item.isEditing}">
+                    <div class="view">
+                        <input type="checkbox" class="toggle" v-model="item.isCompleted" @change="checkAll">
+                        <label @dblclick="editing(index)">{{item.todo}}</label>
+                        <button class="destroy" @click="delCurrtent(index)"></button>
+                    </div>
+                    <input v-fff type="text" class="edit" v-model="item.todo" @blur="saveEdit(index)" @keyup.enter="saveEdit(index)">
+                </li>
+            </ul>
+        </section>
+        <footer class="footer">
+            <span class="todo-count">
+                <strong>{{unfinished}}</strong> 项 剩余
+            </span>
+            <ul class="filters">
+                <li>
+                    <a href="#/all" @click="filter('all')" :class="{selected: this.isFilter=='all'}">全部</a>
+                </li>
+                <li>
+                    <a href="#/active" @click="filter('active')" :class="{selected: this.isFilter=='active'}">未完成</a>
+                </li>
+                <li>
+                    <a href="#/completed" @click="filter('completed')" :class="{selected: this.isFilter=='completed'}">完成</a>
+                </li>
+            </ul>
+            <button class="clear-completed" @click="clearTodo">
+                清空列表
+            </button>
+        </footer>
+    </section>
+    <footer class="info">
+        <p>双击进入编辑状态</p>
+        <p>鸣谢:
+            <a href="http://evanyou.me">Evan You</a>
+        </p>
+        <p>参考于
+            <a href="http://todomvc.com">TodoMVC</a>
+        </p>
+    </footer>
+
+    <script>
+        Vue.directive("fff", {
+            update: (el) => {
+                el.focus();
+            }
+        })
+
+        const app = new Vue({
+            el: ".todoapp",
+            data: {
+                toDoList: [],
+                inputValue: "",
+                filterArr: [],
+                isAll: false,
+                isFilter: "all"
+
+            },
+            methods: {
+                addTodo() {
+                    if (this.inputValue == "") {
+                        alert("请输入任务，主人");
+                        return false;
+                    }
+                    this.toDoList.push(
+                        {
+                            todo: this.inputValue,
+                            isCompleted: false,
+                            isEditing: false
+                        }
+                    );
+                    this.inputValue = "";
+                },
+                delCurrtent(index) {
+                    if (confirm("真的要删除吗？主人")) {
+                        this.toDoList.splice(index, 1);
+                    }
+                },
+                clearTodo() {
+                    if (confirm("真的全部要删除吗？主人")) {
+                        this.toDoList = [];
+                    }
+                },
+                editing(index) {
+                    this.toDoList.forEach(value => {
+                        value.isEditing = false;
+                    })
+                    this.toDoList[index].isEditing = true;
+                },
+                saveEdit(index) {
+                    this.toDoList[index].isEditing = false;
+                },
+                filter(value) {
+                    this.filterArr = [];
+                    if (value == "all") {
+                        this.isFilter = value;
+                        this.filterArr = this.toDoList;
+                    } else if (value == "active") {
+                        this.isFilter = value;
+                        this.toDoList.forEach(v => {
+                            if (v.isCompleted == false) {
+                                this.filterArr.push(v);
+                            }
+                        })
+                    } else if (value == "completed") {
+                        this.isFilter = value;
+                        this.toDoList.forEach(v => {
+                            if (v.isCompleted == true) {
+                                this.filterArr.push(v);
+                            }
+                        })
+                    }
+                },
+                checkedAll() {
+                    this.toDoList.forEach(v => {
+                        v.isCompleted = this.isAll;
+                    })
+                },
+                checkAll() {
+                    let isCheckNum = 0;
+                    this.toDoList.forEach(v => {
+                        if (v.isCompleted) {
+                            isCheckNum++
+                        }
+                    })
+                    this.isAll = isCheckNum == this.toDoList.length;
+                },
+            },
+            computed: {
+                unfinished() {
+                    let num = 0;
+                    this.toDoList.forEach((value, index, array) => {
+                        if (!value.isCompleted) {
+                            num++;
+                        }
+                    });
+                    return num;
+                },
+            }
+        })
+        app.toDoList = JSON.parse(localStorage.getItem("todos")) || [];
+        window.onunload = () => {
+            localStorage.setItem("todos", JSON.stringify(app.toDoList));
+        }
+        app.filter("all");
+    </script>
+
+
+</body>
+
+</html>
